@@ -31,10 +31,6 @@ RUN if [ "$TARGETARCH" = "amd64" ]; then \
       AZP_AGENTPACKAGE_URL=https://vstsagentpackage.azureedge.net/agent/${AGENT_VERSION}/vsts-agent-linux-${TARGETARCH}-${AGENT_VERSION}.tar.gz; \
     fi; \
     curl -LsS "$AZP_AGENTPACKAGE_URL" | tar -xz
-	
-RUN curl -fsSL https://get.docker.com -o get-docker.sh
-RUN chmod +x get-docker.sh
-RUN sh get-docker.sh
 
 COPY ./start.sh .
 RUN chmod +x start.sh
