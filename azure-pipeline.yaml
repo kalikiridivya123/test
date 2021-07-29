@@ -18,16 +18,7 @@ stages:
               submodules: true
               lfs: true
 
-            - task: Docker@2
-              displayName: Build and push an image to container registry
-              inputs:
-                command: buildAndPush
-                repository: dockeragent
-                Dockerfile: ./Dockerfile
-                containerRegistry: acr
-                tags: |
-                  $(Build.BuildNumber)
-                  latest
+            
             - task: PublishPipelineArtifact@1
               inputs:
                 targetPath: '$(Pipeline.Workspace)'
