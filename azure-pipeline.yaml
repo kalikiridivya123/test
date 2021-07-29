@@ -1,0 +1,77 @@
+variables:
+- group: global_aivum
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+  paths:
+    include:
+      - client
+pr:
+  branches:
+    include:
+    - '*'  # Builds will run for pull requests
+
+resources:
+- repo: self
+
+name: $(Build.SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+stages:
+  - stage: Build
+    jobs:
+      - job: Temp_name_attempt
+        pool: aivum-agent-pool
+        steps:
+            - checkout: self
+              submodules: true
+              lfs: true
+
+            - task: Docker@2
+              displayName: Build and push an image to container registry
+              inputs:
+                command: buildAndPush
+                repository: aivum/client
+                Dockerfile: ./client/Dockerfile
+                buildContext: ./client/
+                containerRegistry: aivacrgwe
+                tags: |
+                  $(Build.BuildNumber)
+                  latest
+
+            - task: Bash@3
+              inputs:
+                targetType: 'inline'
+                script: cp client/values.yaml deploy/generic-service/values-deploy.yaml
+
+            - task: PublishPipelineArtifact@1
+              inputs:
+                targetPath: 'deploy/generic-service/'
+                artifactName: 'generic-chart'
+                artifactType: 'pipeline'
+
+  - stage: Deploy
+    jobs:
+      - deployment: Deploy_job_deployment_temp
+        environment: 'test.applications'
+        pool: aivum-agent-pool
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+              - download: current
+
+              - task: HelmInstaller@0
+                inputs:
+                  helmVersion: '3'
+                  installKubectl: true
+
+              - task: HelmDeploy@0
+                inputs:
+                  command: 'upgrade'
+                  chartType: 'FilePath'
+                  chartPath: '$(Pipeline.Workspace)/generic-chart/'
+                  valueFile: '$(Pipeline.Workspace)/generic-chart/values-deploy.yaml'
+                  overrideValues: image.repository=$(REPO)/aivum/client,image.tag=$(Build.BuildNumber)
+                  useClusterAdmin: true
