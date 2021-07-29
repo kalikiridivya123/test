@@ -28,13 +28,11 @@ stages:
                 tags: |
                   $(Build.BuildNumber)
                   latest
-
             - task: PublishPipelineArtifact@1
               inputs:
-                targetPath: 'deploy/generic-service/'
-                artifactName: 'generic-chart'
-                artifactType: 'pipeline'
-
+                targetPath: '$(Pipeline.Workspace)'
+                artifact: 'Drop'
+                publishLocation: 'pipeline'
   - stage: Deploy
     jobs:
       - deployment: Deploy_job_deployment_temp
