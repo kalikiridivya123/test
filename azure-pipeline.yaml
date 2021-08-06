@@ -22,40 +22,19 @@ stages:
   - stage: Build
     jobs:
       - job: Temp_name_attempt
-        pool: aivum-agent-pool
+        pool: 
+         vmimage: ubuntu-latest
         steps:
             - checkout: self
               submodules: true
               lfs: true
 
-            - task: Docker@2
-              displayName: Build and push an image to container registry
-              inputs:
-                command: buildAndPush
-                repository: aivum/client
-                Dockerfile: ./client/Dockerfile
-                buildContext: ./client/
-                containerRegistry: aivacrgwe
-                tags: |
-                  $(Build.BuildNumber)
-                  latest
-
-            - task: Bash@3
-              inputs:
-                targetType: 'inline'
-                script: cp client/values.yaml deploy/generic-service/values-deploy.yaml
-
-            - task: PublishPipelineArtifact@1
-              inputs:
-                targetPath: 'deploy/generic-service/'
-                artifactName: 'generic-chart'
-                artifactType: 'pipeline'
-
   - stage: Deploy
     jobs:
       - deployment: Deploy_job_deployment_temp
-        environment: 'test.applications'
-        pool: aivum-agent-pool
+        environment: 'test'
+        pool: 
+         vmimage: ubuntu-latest
         strategy:
           runOnce:
             deploy:
