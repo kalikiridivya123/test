@@ -1,8 +1,19 @@
+variables:
+- group: global_aivum
+
 trigger:
   batch: true
   branches:
     include:
-    - main
+    - master
+  paths:
+    include:
+      - client
+pr:
+  branches:
+    include:
+    - '*'  # Builds will run for pull requests
+
 resources:
 - repo: self
 
@@ -11,25 +22,40 @@ stages:
   - stage: Build
     jobs:
       - job: Temp_name_attempt
-        pool: 
-         vmimage: ubuntu-latest
+        pool: aivum-agent-pool
         steps:
             - checkout: self
               submodules: true
               lfs: true
 
-            
+            - task: Docker@2
+              displayName: Build and push an image to container registry
+              inputs:
+                command: buildAndPush
+                repository: aivum/client
+                Dockerfile: ./client/Dockerfile
+                buildContext: ./client/
+                containerRegistry: aivacrgwe
+                tags: |
+                  $(Build.BuildNumber)
+                  latest
+
+            - task: Bash@3
+              inputs:
+                targetType: 'inline'
+                script: cp client/values.yaml deploy/generic-service/values-deploy.yaml
+
             - task: PublishPipelineArtifact@1
               inputs:
-                targetPath: '$(Pipeline.Workspace)'
-                artifact: 'Drop'
-                publishLocation: 'pipeline'
+                targetPath: 'deploy/generic-service/'
+                artifactName: 'generic-chart'
+                artifactType: 'pipeline'
+
   - stage: Deploy
     jobs:
       - deployment: Deploy_job_deployment_temp
-        environment: 'test'
-        pool: 
-         vmimage: ubuntu-latest
+        environment: 'test.applications'
+        pool: aivum-agent-pool
         strategy:
           runOnce:
             deploy:
