@@ -1,14 +1,10 @@
-variables:
-- group: global_aivum
+
 
 trigger:
   batch: true
   branches:
     include:
-    - master
-  paths:
-    include:
-      - client
+    - main
 pr:
   branches:
     include:
