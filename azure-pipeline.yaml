@@ -28,7 +28,7 @@ stages:
   - stage: Deploy
     jobs:
       - deployment: Deploy_job_deployment_temp
-        environment: 'test'
+        environment: $(env)
         pool: 
          vmimage: ubuntu-latest
         strategy:
